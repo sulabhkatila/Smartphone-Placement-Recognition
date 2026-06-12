@@ -10,6 +10,11 @@ model = get_model()
 selected_features = model.selected_features
 
 
+@app.get("/")
+async def health():
+    return {"status": "ok", "websocket_endpoint": "/predict"}
+
+
 @app.websocket("/predict")
 async def predict(websocket: WebSocket):
     await websocket.accept()
@@ -166,6 +171,19 @@ def _ios_dataformat(raw_data: dict) -> np.ndarray:
             x.append(0.0)
 
     return np.array(x, dtype=float)
+
+
+def _websocket_library_installed() -> bool:
+    try:
+        import websockets  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    try:
+        import wsproto  # noqa: F401
+        return True
+    except ImportError:
+        return False
 
 
 if __name__ == "__main__":
