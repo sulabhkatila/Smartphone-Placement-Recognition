@@ -166,3 +166,8 @@ def _ios_dataformat(raw_data: dict) -> np.ndarray:
             x.append(0.0)
 
     return np.array(x, dtype=float)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
