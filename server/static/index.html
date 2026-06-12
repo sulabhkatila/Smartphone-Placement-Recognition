@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhereMyPhoneAt Dashboard</title>
+    <!-- Include a modern font (Inter or Rounded equivalent) -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <!-- SVG Defs for gradients -->
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#33c7f2" />
+          <stop offset="50%" stop-color="#8c5cf5" />
+          <stop offset="100%" stop-color="#33c7f2" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="background-container">
+        <div class="bg-gradient bg-gradient-top" id="bg-gradient-top"></div>
+        <div class="bg-gradient bg-gradient-bottom"></div>
+    </div>
+
+    <div class="scroll-container">
+        <div class="content-wrapper">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-text">
+                    <h1>WhereMyPhoneAt</h1>
+                    <p>Real-time placement inference</p>
+                </div>
+                <div class="header-icon" id="header-icon">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+            </header>
+
+            <!-- Hero View -->
+            <div class="hero-card" id="hero-card">
+                <div class="status-pill">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span id="status-text">OFFLINE</span>
+                </div>
+
+                <div class="hero-icon-container">
+                    <div class="buffer-ring" id="buffer-ring" style="display: none;">
+                        <svg viewBox="0 0 132 132">
+                            <circle cx="66" cy="66" r="64"></circle>
+                            <circle cx="66" cy="66" r="64" id="buffer-progress" class="progress-ring"></circle>
+                        </svg>
+                    </div>
+                    <div class="hero-icon-bg"></div>
+                    <i class="fa-solid fa-wave-square hero-icon pulse" id="hero-icon"></i>
+                </div>
+
+                <div class="hero-text">
+                    <h2 id="hero-title">Where's My Phone?</h2>
+                    <p id="hero-subtitle">Waiting for connection...</p>
+                </div>
+
+                <div class="confidence-bar-container" id="confidence-container" style="display: none;">
+                    <div class="confidence-header">
+                        <span>CONFIDENCE</span>
+                        <span id="confidence-value">0.0%</span>
+                    </div>
+                    <div class="confidence-track">
+                        <div class="confidence-fill" id="confidence-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placements Grid -->
+            <div class="placements-section">
+                <h3 class="section-title">ALL PLACEMENTS</h3>
+                <div class="placements-grid">
+                    <!-- Cards will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Terminal Section -->
+            <div class="terminal-section">
+                <div class="terminal-header">
+                    <span class="section-title">RAW RESPONSE</span>
+                    <span class="server-address" id="server-address">Connecting...</span>
+                </div>
+                <div class="terminal-view">
+                    <pre><code id="terminal-output">{}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Control Bar -->
+    <div class="control-bar-container">
+        <div class="control-bar">
+            <div class="control-info">
+                <h4 id="control-status">Ready</h4>
+                <p>1 Hz · 100 Hz sensors · 10s window</p>
+            </div>
+            <div class="control-action">
+                <div class="status-badge" id="status-badge">
+                    <i class="fa-solid fa-plug"></i>
+                    <span>Connect</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>

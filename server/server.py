@@ -1,13 +1,19 @@
 import json
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-
+from fastapi.staticfiles import StaticFiles
+import asyncio
 from model import get_model
 from feature_utils import extract_all_features
 
 app = FastAPI()
 model = get_model()
 selected_features = model.selected_features
+
+dashboard_clients = set()
+
+# Mount static directory for the dashboard
+app.mount("/dashboard", StaticFiles(directory="static", html=True), name="static")
 
 
 @app.get("/")
@@ -35,15 +41,43 @@ async def predict(websocket: WebSocket):
                     combined_data = _combine_10_seconds_data(buffer)
                     predictions = _predict(combined_data)
                     await websocket.send_json(predictions)
+                    await _broadcast_to_dashboards(predictions)
                 else:
                     # Not enough data yet, send a loading state
-                    await websocket.send_json({"status": "loading", "buffered_seconds": len(buffer)})
+                    loading_state = {"status": "loading", "buffered_seconds": len(buffer)}
+                    await websocket.send_json(loading_state)
+                    await _broadcast_to_dashboards(loading_state)
             except ValueError as ve:
                 await websocket.send_json({"error": str(ve)})
             except Exception as e:
                 await websocket.send_json({"error": f"Internal error: {str(e)}"})
     except WebSocketDisconnect:
         pass
+
+
+@app.websocket("/ws/dashboard")
+async def dashboard_websocket(websocket: WebSocket):
+    await websocket.accept()
+    dashboard_clients.add(websocket)
+    try:
+        while True:
+            # Keep connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        dashboard_clients.remove(websocket)
+
+
+async def _broadcast_to_dashboards(message: dict):
+    if not dashboard_clients:
+        return
+    disconnected = set()
+    for client in dashboard_clients:
+        try:
+            await client.send_json(message)
+        except Exception:
+            disconnected.add(client)
+    for client in disconnected:
+        dashboard_clients.remove(client)
 
 
 def _combine_10_seconds_data(buffer: list[dict]) -> dict:
