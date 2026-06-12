@@ -1,9 +1,7 @@
 const PLACEMENTS = [
-    { id: 'LB', title: 'Lower Back', subtitle: 'Belt-fixed at L5, landscape', icon: 'fa-solid fa-person', color: 'var(--color-lb)' },
     { id: 'H', title: 'Hand-held', subtitle: 'Natural arm swing', icon: 'fa-solid fa-hand', color: 'var(--color-hand)' },
     { id: 'BP', title: 'Back Pocket', subtitle: 'Trousers rear pocket', icon: 'fa-solid fa-mobile-screen-button', color: 'var(--color-bp)' },
     { id: 'FP', title: 'Front Pocket', subtitle: 'Trousers front pocket', icon: 'fa-solid fa-mobile-screen', color: 'var(--color-fp)' },
-    { id: 'CP', title: 'Coat Pocket', subtitle: 'Jacket side pocket', icon: 'fa-solid fa-shirt', color: 'var(--color-cp)' },
     { id: 'SB', title: 'Shoulder Bag', subtitle: 'Carried in bag', icon: 'fa-solid fa-suitcase', color: 'var(--color-sb)' }
 ];
 

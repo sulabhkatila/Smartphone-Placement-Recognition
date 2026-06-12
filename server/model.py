@@ -46,11 +46,28 @@ class Model:
         else:
             scores = np.full(len(self.class_names), 1.0 / len(self.class_names))
 
-        top_idx = int(np.argmax(scores))
-        scores = np.round(scores, 5)
-        scores[top_idx] += round(1.0 - scores.sum(), 5)
-
-        return dict(zip(self.class_names, scores))
+        raw_scores = dict(zip(self.class_names, scores))
+        
+        # Merge LB into BP, and CP into FP
+        merged_scores = {
+            "H": raw_scores.get("H", 0.0),
+            "BP": raw_scores.get("BP", 0.0) + raw_scores.get("LB", 0.0),
+            "FP": raw_scores.get("FP", 0.0) + raw_scores.get("CP", 0.0),
+            "SB": raw_scores.get("SB", 0.0)
+        }
+        
+        # Re-normalize and handle rounding to ensure exactly 1.0
+        total_merged = sum(merged_scores.values())
+        if total_merged > 0:
+            for k in merged_scores:
+                merged_scores[k] = round(merged_scores[k] / total_merged, 5)
+            
+            # Ensure sum is exactly 1.0
+            top_class = max(merged_scores, key=merged_scores.get)
+            current_sum = sum(merged_scores.values())
+            merged_scores[top_class] = round(merged_scores[top_class] + (1.0 - current_sum), 5)
+            
+        return merged_scores
 
 
 def get_model() -> Model:
