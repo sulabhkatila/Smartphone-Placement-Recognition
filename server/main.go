@@ -30,15 +30,22 @@ func main() {
 		for result := range workerPool.ResultQueue {
 			// Find the client and send the prediction back
 			if client, ok := hub.GetSensorClient(result.ClientID); ok {
-				msg, err := json.Marshal(result)
-				if err == nil {
-					client.Send <- msg
+				if result.Error != nil {
+					msg, err := json.Marshal(map[string]string{"error": *result.Error})
+					if err == nil {
+						client.Send <- msg
+					}
+				} else if result.Prediction != nil {
+					msg, err := json.Marshal(result.Prediction)
+					if err == nil {
+						client.Send <- msg
+					}
 				}
 			}
 
 			// Broadcast to all dashboards
-			if result.Error == nil {
-				msg, err := json.Marshal(result)
+			if result.Error == nil && result.Prediction != nil {
+				msg, err := json.Marshal(result.Prediction)
 				if err == nil {
 					hub.Broadcast <- msg
 				}
