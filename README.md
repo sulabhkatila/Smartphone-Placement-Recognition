@@ -80,12 +80,9 @@ First, download or clone the repository to your machine. Then, open your termina
 
 ```bash
 cd server
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-pip install -r requirements.txt
-python server.py
+./start_server.sh
 ```
-*The server will now be listening locally. You can visit `http://localhost:8000/dashboard` in your browser to view the live dashboard!*
+*This script will automatically set up the Python virtual environment for background workers, build the Go backend, and start the server. You can visit `http://localhost:8000/dashboard` in your browser to view the live dashboard!*
 
 ### 2. Run the iOS App
 1. Open Xcode and open the `PhonePlacementApp.xcodeproj` file located inside the `PhonePlacementApp` directory.
