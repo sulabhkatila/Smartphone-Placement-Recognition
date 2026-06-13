@@ -15,8 +15,12 @@ Hence the app uses 4 classes
 - **Front Pocket** (`FP`)
 - **Shoulder Bag** (`SB`)
 
-The pipeline of the app is as follows:
+This is how the UI looks (the app and the web dashboard):
 
+<p align="center" style="display: flex; align-items: center; justify-content: center;">
+  <img src="assets/Live_PhoneDashboard.png" alt="iOS App Dashboard" width="30%" align="middle" style="vertical-align: middle;">
+  <img src="assets/Live_webDashboard.png" alt="Web Dashboard" width="68%" align="middle" style="vertical-align: middle;">
+</p>
 
 ## System Design and Architecture
 
@@ -26,7 +30,7 @@ The live prediction framework streams data from the user's phone to the backend 
 flowchart TD
     Phone["📱 User Phone (CoreMotion)"] <-->|"WebSocket Stream (/predict)"| Server["🖥️ Backend Server (FastAPI)"]
     Server --> Processing{"⚙️ Feature Extraction & AdaBoost"}
-    Processing -->|"4-Class Prediction Result"| Server
+    Processing -->|"Custom 4-Class Prediction Result"| Server
     Server -->|"WebSocket Broadcast (/ws/dashboard)"| Dashboard["💻 Web Dashboard (Live Monitoring)"]
 ```
 
