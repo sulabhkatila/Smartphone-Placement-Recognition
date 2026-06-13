@@ -50,9 +50,13 @@ anyways, here some more detailed lines about the architectural compoenents:
     - Features a premium, real-time UI that dynamically updates to display the backend's inferred placement.
 
 2. **Backend Server (FastAPI):**
-    - As mentioned above, it manages WebSocket connections for both the streaming smartphones and the live dashboards.
-    - It maintains a **10-second rolling window** of IMU data. Once 10 seconds of data is buffered, it computes L2 norm magnitudes and extracts 50 distinct time and frequency-domain features.
-    - Executes inference using a custom Python implementation of an **AdaBoost Decision Tree Ensemble** (originally trained in MATLAB).
+    - Acts as the central hub, managing bidirectional WebSocket connections for streaming smartphones (`/predict`) and live monitoring dashboards (`/ws/dashboard`).
+    - **Data Preprocessing:** Parses raw iOS CoreMotion payloads (handling both combined `motion` arrays and separate `accelerometer`/`gyroscope` streams). It converts accelerations from G's to $m/s^2$, computes orientation-invariant L2 norm magnitudes, and standardizes the time-series by resampling it to exactly **100 Hz** over a **10-second rolling window** (1000 samples).
+    - **Feature Extraction (`feature_utils.py`):** Translates the raw waves into 50 distinct metrics used for walking gait analysis. The features span:
+        - *Statistical & Time-Domain:* Mean, Variance, Skew, Kurtosis, RMS, Jerk RMS, Autocorrelation, Multiscale Entropy, and Teager Energy Operator (TEO).
+        - *Frequency-Domain:* FFT-based Dominant Power, Spectral Entropy, Mean/Median frequencies, and Harmonic Ratios.
+        - *Time-Frequency:* Continuous Wavelet Transform (CWT) evaluating energy and entropy across 8 distinct frequency bands (0.5 Hz to 25 Hz).
+    - **Inference (`model.py`):** Feeds the feature vector into a custom Python implementation of an **AdaBoost Decision Tree Ensemble**. It intercepts the model's native 6-class output, merges the probabilities into our 4-class taxonomy, normalizes them to exactly 1.0, and broadcasts the result globally.
 
 3. **Machine Learning Model:**
     - Evaluates the extracted features to determine the phone's physical placement.
