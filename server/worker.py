@@ -106,127 +106,65 @@ def _ios_dataformat(raw_data: dict, selected_features: list) -> np.ndarray:
     return np.array(x, dtype=float)
 
 
-def worker_process(
-    worker_id: int,
-    job_queue: multiprocessing.Queue,
-    result_queue: multiprocessing.Queue,
-):
-    """
-    Main loop for a worker process.
-    
-    Each worker:
-    1. Loads the model independently (own memory space).
-    2. Waits for jobs on job_queue.
-    3. Runs feature extraction + inference.
-    4. Puts results on result_queue.
-    """
-    print(f"[Worker {worker_id}] Starting up, loading model...")
-    
+import sys
+import json
+import logging
+
+# Configure logging to write to stderr so it doesn't corrupt stdout JSON
+logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='[Python Worker] %(message)s')
+
+def main():
+    logging.info("Starting up, loading model...")
     try:
         model = get_model()
-        print(f"[Worker {worker_id}] Model loaded successfully. Ready for jobs.")
+        logging.info("Model loaded successfully. Ready for jobs.")
     except Exception as e:
-        print(f"[Worker {worker_id}] FATAL: Failed to load model: {e}")
-        traceback.print_exc()
-        return
-    
-    jobs_processed = 0
-    
-    while True:
+        logging.error(f"FATAL: Failed to load model: {e}")
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(1)
+
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+
         try:
-            job = job_queue.get()
+            job = json.loads(line)
+        except json.JSONDecodeError as e:
+            logging.error(f"Failed to parse JSON: {e}")
+            continue
+
+        job_id = job.get("job_id")
+        client_id = job.get("client_id")
+        raw_data = job.get("raw_data")
+
+        result = {
+            "job_id": job_id,
+            "client_id": client_id,
+            "prediction": None,
+            "error": None,
+        }
+
+        try:
+            # 1. Feature extraction and preprocessing
+            x = _ios_dataformat(raw_data, model.selected_features)
             
-            # Sentinel: None means shut down
-            if job is None:
-                print(f"[Worker {worker_id}] Received shutdown signal. Processed {jobs_processed} jobs.")
-                break
-            
-            job_id = job["job_id"]
-            client_id = job["client_id"]
-            raw_data = job["raw_data"]
-            
-            try:
-                # 1. Feature extraction and preprocessing
-                x = _ios_dataformat(raw_data, model.selected_features)
-                
-                # 2. Run ensemble prediction
-                prediction = model.run_predictions(x)
-                error = None
-            except ValueError as ve:
-                prediction = None
-                error = str(ve)
-            
-            result = {
-                "job_id": job_id,
-                "client_id": client_id,
-                "worker_id": worker_id,
-                "prediction": prediction,
-                "error": error,
-            }
-            
-            result_queue.put(result)
-            jobs_processed += 1
-            
+            # 2. Run ensemble prediction
+            prediction = model.run_predictions(x)
+            result["prediction"] = prediction
+        except ValueError as ve:
+            result["error"] = str(ve)
         except Exception as e:
-            error_msg = f"[Worker {worker_id}] Error processing job: {e}"
-            print(error_msg)
-            traceback.print_exc()
-            
-            # Still send a result so the server doesn't hang waiting
-            try:
-                result_queue.put({
-                    "job_id": job.get("job_id", "unknown"),
-                    "client_id": job.get("client_id", "unknown"),
-                    "worker_id": worker_id,
-                    "prediction": None,
-                    "error": str(e),
-                })
-            except Exception:
-                pass
+            logging.error(f"Error processing job {job_id}: {e}")
+            traceback.print_exc(file=sys.stderr)
+            result["error"] = str(e)
 
+        # Output the result as JSON to stdout
+        try:
+            print(json.dumps(result))
+            sys.stdout.flush()
+        except Exception as e:
+            logging.error(f"Failed to write result to stdout: {e}")
 
-def start_worker_pool(
-    num_workers: int,
-    job_queue: multiprocessing.Queue,
-    result_queue: multiprocessing.Queue,
-) -> list:
-    """
-    Spawn num_workers worker processes.
-    
-    Returns:
-        list[multiprocessing.Process]: The list of running worker processes.
-    """
-    workers = []
-    for i in range(num_workers):
-        p = multiprocessing.Process(
-            target=worker_process,
-            args=(i, job_queue, result_queue),
-            name=f"InferenceWorker-{i}",
-            daemon=True,
-        )
-        p.start()
-        workers.append(p)
-        print(f"[Pool] Spawned worker process {i} (PID: {p.pid})")
-    
-    return workers
-
-
-def stop_worker_pool(
-    workers: list,
-    job_queue: multiprocessing.Queue,
-    timeout: float = 10.0,
-):
-    """
-    Gracefully shut down all workers by sending sentinel values and joining.
-    """
-    print(f"[Pool] Sending shutdown signals to {len(workers)} workers...")
-    for _ in workers:
-        job_queue.put(None)
-    
-    for w in workers:
-        w.join(timeout=timeout)
-        if w.is_alive():
-            print(f"[Pool] Worker {w.name} didn't stop gracefully, terminating...")
-            w.terminate()
-    
-    print("[Pool] All workers stopped.")
+if __name__ == "__main__":
+    main()
