@@ -16,10 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build
+      - name: Build iOS App
         run: |
           xcodebuild \
-            -project BatMapper.xcodeproj \
-            -scheme BatMapper \
-            -destination 'generic/platform=iOS' \
-            build
+            -project PhonePlacementApp/PhonePlacementApp.xcodeproj \
+            -scheme PhonePlacementApp \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+            clean build
