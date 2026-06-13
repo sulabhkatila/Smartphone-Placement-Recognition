@@ -70,3 +70,41 @@ anyways, here some more detailed lines about the architectural compoenents:
     - Served directly by FastAPI at `/dashboard`.
     - Connects to the backend via a secondary broadcast WebSocket (`/ws/dashboard`).
     - Replicates the iOS application's glassmorphic, dark-mode aesthetic to allow users to monitor the live phone placement from any browser in real-time.
+
+---
+
+## How to Run
+
+### 1. Setup the Backend Server
+First, download or clone the repository to your machine. Then, open your terminal and navigate to the `server` directory to get the backend running:
+
+```bash
+cd server
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+pip install -r requirements.txt
+python server.py
+```
+*The server will now be listening locally. You can visit `http://localhost:8000/dashboard` in your browser to view the live dashboard!*
+
+### 2. Run the iOS App
+1. Open Xcode and open the `PhonePlacementApp.xcodeproj` file located inside the `PhonePlacementApp` directory.
+2. **Sign the App:** 
+   - Click on the `PhonePlacementApp` project in the left-hand Project Navigator.
+   - Go to the **Signing & Capabilities** tab.
+   - Select your Personal Apple ID in the **Team** dropdown (you may need to add your account in Xcode Preferences first).
+   - Ensure the Bundle Identifier is unique if you encounter any bundle conflicts.
+3. **Deploy:** Attach your physical iPhone to your Mac via USB (or wireless connection).
+4. At the top of the Xcode window, change the run destination from a simulator to your physical iPhone.
+5. Hit the **Run** (▶) button to build and install the app.
+6. **Trust the Developer:** The first time you install an app you built yourself, iOS will block it for security. On your iPhone, go to **Settings > General > VPN & Device Management > Developer App**, and tap **Trust**.
+7. Open the **WhereMyPhoneAt** app on your phone, and hit **Start** to begin streaming your IMU data!
+
+> [!NOTE]
+> **Network & Firewall:** Since your iPhone will be streaming data to your Mac over your local Wi-Fi network, ensure that both devices are on the same network. You may need to grant local network permissions or temporarily adjust your Mac's firewall settings if the connection is blocked. Ensure the app is pointing to your Mac's local IP address!
+
+### 3. View the Live Dashboard
+Once the app is running and connected, simply open your favorite web browser on your computer and navigate to:
+`http://localhost:8000/dashboard`
+
+You'll see a real-time web dashboard mimicking the app's premium UI, instantly updating with the model's live predictions!
